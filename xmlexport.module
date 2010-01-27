@@ -1,0 +1,93 @@
+<?php
+
+
+
+function xmlexport_menu(){
+	$items['node/%node/xml'] = array(
+	'title' => 'Xml',
+	'page callback' => 'xmlexport_show_xml',
+	'access callback' => 'user_access',
+	'access arguments' => array('administer content'),
+	'type' => MENU_LOCAL_TASK,
+	'weight' => 2,
+	'file' => 'xmlexport.pages.inc',
+	);
+	$items['admin/xmlexport/%'] = array(
+	'title' => 'Xml',
+	'page callback' => 'xmlexport_show_admin',
+	'access callback' => 'user_access',
+	'access arguments' => array('administer content'),	
+	'file' => 'xmlexport.pages.inc',
+	);
+	return $items;
+}
+
+function xmlexport_node2xml($node){
+	$output = "<node>\n";
+	foreach ($node as $key => $value){
+		$output .= xmlexport_value2xml($key, $value);
+	}
+	$output .= "</node>\n\n";
+	return $output;
+}
+
+function xmlexport_value2xml($key, $value){
+	if(function_exists("xtag_".$key)){
+		$output .= call_user_func_array("xtag_".$key, array($key, $value));
+	}elseif(is_array($value) or is_object($value)){
+		foreach ($value as $key2 => $value2){
+			$output .= xmlexport_value2xml($key2, $value2);
+		}
+	}elseif(is_numeric($key)){
+		$output .= "<t$key>$value</t$key>\n";		
+	}else{
+		$output .= "<$key>$value</$key>\n";
+	}
+	return $output;
+}
+
+function xtag_taxonomy($key, $value){
+	$output .= "<taxonomy>\n";
+	foreach ($value as $key2 => $value2){
+		$output .= "<term>$value2->name</term>\n";
+	}
+	$output .= "</taxonomy>\n";
+	return $output;
+}
+
+function xtag_comments($key, $value){
+	$output .= "<comments>\n";
+	foreach ($value as $key2 => $value2){
+		$output .= "<comment>\n";
+		foreach ($value2 as $key3 => $value3){
+			$output .= xmlexport_value2xml($key3, $value3);
+		}
+		$output .= "</comment>\n";
+	}
+	$output .= "</comments>\n";
+	return $output;
+}
+
+function xtag_hostname($key, $value){
+	return;
+}
+
+function xtag_body($key, $value){
+	$output .= "<$key>"._filter_autop($value)."</$key>\n";
+	return $output;
+}
+
+function xtag_teaser($key, $value){
+	$output .= "<$key>"._filter_autop(strip_tags($value, "<a><i><b><em><strong><img>"))."</$key>\n";
+	return $output;
+}
+
+function xtag_comment($key, $value){
+	$output .= "<$key>"._filter_autop($value)."</$key>\n";
+	return $output;
+}
+
+
+function xtag_mail($key, $value){
+	return "";
+}

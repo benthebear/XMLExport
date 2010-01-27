@@ -1,0 +1,6 @@
+; $Id:  $
+name = XML Export
+description = Exports Posts to an XML Format
+package = XML
+version = VERSION
+core = 6.x
